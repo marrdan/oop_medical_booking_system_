@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Scanner;
 
-import static java.nio.file.Files.exists;
-
 public class Main {
 
     public static void main(String[] args) {

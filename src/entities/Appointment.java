@@ -3,45 +3,51 @@ package entities;
 import java.time.LocalDateTime;
 
 public class Appointment {
-    private int pacientId;
-    private int appointmentId;
+
+    private int id;
+    private int patientId;
     private int doctorId;
     private LocalDateTime appointmentTime;
 
-    public Appointment(int pacientId, int appointmentId, LocalDateTime appointmentTime) {
-        setPacientId(pacientId);
-        setAppointmentId(appointmentId);
-        setDoctorId(doctorId);
-        setAppointmentTime(appointmentTime);
-
-    }
-
-    public void setAppointmentTime(LocalDateTime appointmentTime) {
+    // используется при CREATE (id генерирует БД)
+    public Appointment(int patientId, int doctorId, LocalDateTime appointmentTime) {
+        this.patientId = patientId;
+        this.doctorId = doctorId;
         this.appointmentTime = appointmentTime;
     }
 
-    public void setPacientId(int pacientId) {
-        this.pacientId = pacientId;
-    }
-    public void setAppointmentId(int appointmentId) {
-        this.appointmentId = appointmentId;
+    // используется при READ (findById, findAll)
+    public Appointment(int id, int patientId, int doctorId, LocalDateTime appointmentTime) {
+        this.id = id;
+        this.patientId = patientId;
+        this.doctorId = doctorId;
+        this.appointmentTime = appointmentTime;
     }
 
-    public void setDoctorId(int doctorId) {
-        this.doctorId = doctorId;
+    public int getId() {
+        return id;
     }
-    public int getPacientId() {
-        return pacientId;
+
+    public int getPatientId() {
+        return patientId;
     }
-    public int getAppointmentId() {
-        return appointmentId;
-    }
+
     public int getDoctorId() {
         return doctorId;
     }
+
     public LocalDateTime getAppointmentTime() {
         return appointmentTime;
     }
 
+    @Override
+    public String toString() {
+        return "Appointment{" +
+                "id=" + id +
+                ", patientId=" + patientId +
+                ", doctorId=" + doctorId +
+                ", appointmentTime=" + appointmentTime +
+                '}';
+    }
 
 }

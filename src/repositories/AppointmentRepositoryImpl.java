@@ -2,7 +2,6 @@ package repositories;
 
 import db.IDB;
 import entities.Appointment;
-import entities.Doctor;
 import exceptions.NotFoundException;
 
 import java.sql.*;
@@ -24,7 +23,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         try (Connection con = db.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setInt(1, a.getPacientId());
+            ps.setInt(1, a.getPatientId());
             ps.setInt(2, a.getDoctorId());
             ps.setTimestamp(3, Timestamp.valueOf(a.getAppointmentTime()));
             return ps.executeUpdate() > 0;
@@ -47,7 +46,31 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
     @Override
     public List<Appointment> findAll() {
-        return List.of();
+        List<Appointment> appointments = new ArrayList<>();
+
+        String sql = "SELECT * FROM appointments";
+
+        try (Connection con = db.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                int patientId = rs.getInt("patient_id");
+                int doctorId = rs.getInt("doctor_id");
+                LocalDateTime time =
+                        rs.getTimestamp("appointment_time").toLocalDateTime();
+
+                appointments.add(
+                        new Appointment(id, patientId, doctorId, time)
+                );
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return appointments;
     }
 
     @Override
@@ -58,22 +81,28 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setInt(1, id);
+
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    int patientId = rs.getInt("patient_id");
-                    int doctorId = rs.getInt("doctor_id");
-                    LocalDateTime time = rs.getTimestamp("appointment_time").toLocalDateTime();
 
-
-                    return new Appointment(id, patientId, time);
-                } else {
-                    throw new NotFoundException("Appointment with ID " + id + " not found");
+                if (!rs.next()) {
+                    throw new NotFoundException(
+                            "Appointment with ID " + id + " not found"
+                    );
                 }
+
+                int patientId = rs.getInt("patient_id");
+                int doctorId = rs.getInt("doctor_id");
+                LocalDateTime time =
+                        rs.getTimestamp("appointment_time").toLocalDateTime();
+
+                return new Appointment(id, patientId, doctorId, time);
             }
 
         } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
+            throw new RuntimeException("Error finding appointment by id", e);
         }
     }
+
+
+
 }
