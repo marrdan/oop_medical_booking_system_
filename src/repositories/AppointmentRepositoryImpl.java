@@ -3,7 +3,6 @@ package repositories;
 import db.IDB;
 import entities.Appointment;
 import exceptions.AppointmentNotFoundException;
-
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     public AppointmentRepositoryImpl(IDB db) {
         this.db = db;
     }
-
     @Override
     public void save(Appointment a) {
         String sql = """
