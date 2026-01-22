@@ -8,7 +8,7 @@ public class Appointment {
     private int patientId;
     private int doctorId;
     private LocalDateTime time;
-    private String status; // BOOKED, CANCELLED
+    private String status;
 
     public Appointment(int patientId, int doctorId, LocalDateTime time) {
         this.patientId = patientId;
