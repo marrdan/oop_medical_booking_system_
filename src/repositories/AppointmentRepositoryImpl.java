@@ -3,6 +3,8 @@ package repositories;
 import db.IDB;
 import entities.Appointment;
 import exceptions.AppointmentNotFoundException;
+import exceptions.DoctorUnavailableException;
+
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -92,7 +94,13 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
     @Override
     public List<Appointment> findByDoctor(int doctorId) {
-        return find("doctor_id", doctorId);
+        List<Appointment> list = find("doctor_id", doctorId);
+
+        if (list.isEmpty()) {
+            throw new DoctorUnavailableException("No appointments found for doctor with id " + doctorId);
+        }
+
+        return list;
     }
 
     @Override
