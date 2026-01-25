@@ -112,13 +112,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
     @Override
     public List<Appointment> findByPatient(int patientId) {
-        List<Appointment> list = find("patient_id", patientId);
-
-        if (list.isEmpty()) {
-            throw new AppointmentNotFoundException("No appointments found for patient with id " + patientId);
-        }
-
-        return list;
+        return find("patient_id", patientId);
     }
 
     private List<Appointment> find(String field, int id) {
