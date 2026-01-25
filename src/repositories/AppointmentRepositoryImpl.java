@@ -34,6 +34,10 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
             ps.setTimestamp(3, Timestamp.valueOf(a.getTime()));
             ps.setString(4, a.getStatus());
             ps.executeUpdate();
+            ResultSet rs = ps.getGeneratedKeys();
+            if (rs.next()) {
+                a.setId(rs.getInt(1));
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
