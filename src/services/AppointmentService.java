@@ -19,7 +19,6 @@ public class AppointmentService {
     public void book(Appointment a) {
         availability.check(a.getDoctorId(), a.getTime());
         repo.save(a);
-
     }
 
     public void cancel(int id) {
@@ -32,6 +31,7 @@ public class AppointmentService {
     }
 
     public List<Appointment> patientVisits(int patientId) {
+
         return repo.findByPatient(patientId);
     }
 

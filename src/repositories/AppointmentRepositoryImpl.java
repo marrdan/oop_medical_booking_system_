@@ -4,7 +4,6 @@ import db.IDB;
 import entities.Appointment;
 import exceptions.AppointmentNotFoundException;
 import exceptions.DoctorUnavailableException;
-
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,7 +16,6 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
     public AppointmentRepositoryImpl(IDB db) {
         this.db = db;
     }
-
 
 
     @Override
@@ -34,6 +32,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
             ps.setTimestamp(3, Timestamp.valueOf(a.getTime()));
             ps.setString(4, a.getStatus());
             ps.executeUpdate();
+
             ResultSet rs = ps.getGeneratedKeys();
             if (rs.next()) {
                 a.setId(rs.getInt(1));

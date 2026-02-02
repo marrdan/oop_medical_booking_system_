@@ -8,6 +8,8 @@ import repositories.AppointmentRepositoryImpl;
 import services.AppointmentService;
 import services.DoctorAvailabilityService;
 
+
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Scanner;
@@ -29,11 +31,9 @@ public class Main {
                     4. Patient visits
                     0. Exit
                     """);
-
             System.out.print("Enter your choice: ");
             String input = sc.nextLine();
             int choice;
-
             try {
                 choice = Integer.parseInt(input);
             } catch (NumberFormatException e) {
@@ -76,6 +76,7 @@ public class Main {
                     try {
                         System.out.print("Doctor ID: ");
                         int d = Integer.parseInt(sc.nextLine());
+
                         List<Appointment> schedule = service.doctorSchedule(d);
 
                         if (schedule.isEmpty()) {
