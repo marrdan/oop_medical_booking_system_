@@ -82,7 +82,10 @@ public class Main {
                         if (schedule.isEmpty()) {
                             System.out.println("No appointments found for doctor with ID " + d);
                         } else {
-                            schedule.forEach(System.out::println);
+                            schedule.stream()
+                                    .filter(a -> "BOOKED".equals(a.getStatus()))
+                                    .sorted((a1, a2) -> a1.getTime().compareTo(a2.getTime()))
+                                    .forEach(System.out::println);
                         }
 
                     } catch (NumberFormatException e) {
@@ -91,6 +94,7 @@ public class Main {
                         System.out.println("Error: " + e.getMessage());
                     }
                 }
+
 
                 case 4 -> {
                     try {

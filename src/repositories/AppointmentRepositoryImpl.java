@@ -4,12 +4,14 @@ import db.IDB;
 import entities.Appointment;
 import exceptions.AppointmentNotFoundException;
 import exceptions.DoctorUnavailableException;
+
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class AppointmentRepositoryImpl implements AppointmentRepository {
+public class AppointmentRepositoryImpl implements AppointmentRepository, Repository<Appointment> {
 
     private final IDB db;
 
@@ -17,16 +19,112 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         this.db = db;
     }
 
+    // AppointmentRepository методы
 
     @Override
     public void save(Appointment a) {
+        saveAppointment(a);
+    }
 
-        String sql = """
-        INSERT INTO appointments(patient_id, doctor_id, appointment_time, status)
-        VALUES (?, ?, ?, ?)
-    """;
+    @Override
+    public void cancel(int id) {
+        String sql = "UPDATE appointments SET status='CANCELLED' WHERE id=?";
+
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            if (ps.executeUpdate() == 0)
+                throw new AppointmentNotFoundException("Appointment not found");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Appointment findById(int id) {
+        return findAppointmentById(id);
+    }
+
+    @Override
+    public List<Appointment> findByDoctor(int doctorId) {
+        List<Appointment> list = findByField("doctor_id", doctorId);
+
+        if (list.isEmpty()) {
+            throw new DoctorUnavailableException("No appointments found for doctor with id " + doctorId);
+        }
+
+        return list;
+    }
+
+    @Override
+    public List<Appointment> findByPatient(int patientId) {
+        return findByField("patient_id", patientId);
+    }
+
+    @Override
+    public boolean exists(int doctorId, LocalDateTime time) {
+        String sql = """
+            SELECT 1 FROM appointments
+            WHERE doctor_id=? AND appointment_time=? AND status='BOOKED'
+        """;
+
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+
+            ps.setInt(1, doctorId);
+            ps.setTimestamp(2, Timestamp.valueOf(time));
+            return ps.executeQuery().next();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // Repository<Appointment> methods
+
+    @Override
+    public void delete(int id) {
+        cancel(id);
+    }
+
+    @Override
+    public List<Appointment> findAll() {
+        List<Appointment> list = new ArrayList<>();
+        String sql = "SELECT * FROM appointments";
+
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                list.add(new Appointment(
+                        rs.getInt("id"),
+                        rs.getInt("patient_id"),
+                        rs.getInt("doctor_id"),
+                        rs.getTimestamp("appointment_time").toLocalDateTime(),
+                        rs.getString("status")
+                ));
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        return list.stream()
+                .filter(a -> "BOOKED".equals(a.getStatus()))
+                .sorted((a1, a2) -> a1.getTime().compareTo(a2.getTime()))
+                .collect(Collectors.toList());
+    }
+
+
+
+    private void saveAppointment(Appointment a) {
+        String sql = """
+            INSERT INTO appointments(patient_id, doctor_id, appointment_time, status)
+            VALUES (?, ?, ?, ?)
+        """;
+        try (Connection c = db.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setInt(1, a.getPatientId());
             ps.setInt(2, a.getDoctorId());
             ps.setTimestamp(3, Timestamp.valueOf(a.getTime()));
@@ -42,49 +140,14 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         }
     }
 
-
-    @Override
-    public boolean exists(int doctorId, LocalDateTime time) {
-        String sql = """
-    SELECT 1 FROM appointments
-    WHERE doctor_id=? AND appointment_time=? AND status='BOOKED'
-""";
-
-        try (Connection c = db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-
-            ps.setInt(1, doctorId);
-            ps.setTimestamp(2, Timestamp.valueOf(time));
-            return ps.executeQuery().next();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public void cancel(int id) {
-        String sql = "UPDATE appointments SET status='CANCELLED' WHERE id=?";
-        try (Connection c = db.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-            if (ps.executeUpdate() == 0)
-                throw new AppointmentNotFoundException("Appointment not found");
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Override
-    public Appointment findById(int id) {
+    private Appointment findAppointmentById(int id) {
         String sql = "SELECT * FROM appointments WHERE id=?";
         try (Connection c = db.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
 
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
-            if (!rs.next())
-                throw new AppointmentNotFoundException("Appointment not found");
+            if (!rs.next()) throw new AppointmentNotFoundException("Appointment not found");
 
             return new Appointment(
                     rs.getInt("id"),
@@ -93,28 +156,13 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
                     rs.getTimestamp("appointment_time").toLocalDateTime(),
                     rs.getString("status")
             );
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
     }
 
-    @Override
-    public List<Appointment> findByDoctor(int doctorId) {
-        List<Appointment> list = find("doctor_id", doctorId);
-
-        if (list.isEmpty()) {
-            throw new DoctorUnavailableException("No appointments found for doctor with id " + doctorId);
-        }
-
-        return list;
-    }
-
-    @Override
-    public List<Appointment> findByPatient(int patientId) {
-        return find("patient_id", patientId);
-    }
-
-    private List<Appointment> find(String field, int id) {
+    private List<Appointment> findByField(String field, int id) {
         List<Appointment> list = new ArrayList<>();
         String sql = "SELECT * FROM appointments WHERE " + field + "=?";
         try (Connection c = db.getConnection();
@@ -122,6 +170,7 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
 
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
+
             while (rs.next()) {
                 list.add(new Appointment(
                         rs.getInt("id"),
@@ -136,4 +185,5 @@ public class AppointmentRepositoryImpl implements AppointmentRepository {
         }
         return list;
     }
+
 }
