@@ -96,14 +96,17 @@ public class AppointmentRepositoryImpl implements AppointmentRepository, Reposit
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                list.add(new Appointment(
-                        rs.getInt("id"),
-                        rs.getInt("patient_id"),
-                        rs.getInt("doctor_id"),
-                        rs.getTimestamp("appointment_time").toLocalDateTime(),
-                        rs.getString("status")
-                ));
+                Appointment appointment = new Appointment.Builder()
+                        .id(rs.getInt("id"))
+                        .patientId(rs.getInt("patient_id"))
+                        .doctorId(rs.getInt("doctor_id"))
+                        .time(rs.getTimestamp("appointment_time").toLocalDateTime())
+                        .status(rs.getString("status"))
+                        .build();
+
+                list.add(appointment);
             }
+
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -149,13 +152,14 @@ public class AppointmentRepositoryImpl implements AppointmentRepository, Reposit
             ResultSet rs = ps.executeQuery();
             if (!rs.next()) throw new AppointmentNotFoundException("Appointment not found");
 
-            return new Appointment(
-                    rs.getInt("id"),
-                    rs.getInt("patient_id"),
-                    rs.getInt("doctor_id"),
-                    rs.getTimestamp("appointment_time").toLocalDateTime(),
-                    rs.getString("status")
-            );
+            return new Appointment.Builder()
+                    .id(rs.getInt("id"))
+                    .patientId(rs.getInt("patient_id"))
+                    .doctorId(rs.getInt("doctor_id"))
+                    .time(rs.getTimestamp("appointment_time").toLocalDateTime())
+                    .status(rs.getString("status"))
+                    .build();
+
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -172,14 +176,17 @@ public class AppointmentRepositoryImpl implements AppointmentRepository, Reposit
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                list.add(new Appointment(
-                        rs.getInt("id"),
-                        rs.getInt("patient_id"),
-                        rs.getInt("doctor_id"),
-                        rs.getTimestamp("appointment_time").toLocalDateTime(),
-                        rs.getString("status")
-                ));
+                Appointment appointment = new Appointment.Builder()
+                        .id(rs.getInt("id"))
+                        .patientId(rs.getInt("patient_id"))
+                        .doctorId(rs.getInt("doctor_id"))
+                        .time(rs.getTimestamp("appointment_time").toLocalDateTime())
+                        .status(rs.getString("status"))
+                        .build();
+
+                list.add(appointment);
             }
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
